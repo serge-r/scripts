@@ -1,5 +1,7 @@
 # scripts
 
-**mysql** - scripts for restore InnoDB tables
+There's some of my work scripts.
 
-**python** - some python scripts for scan and mgmt network device
+**mysql** - PHP\Bash scripts for restore InnoDB tables
+
+**python** - some Python scripts for scan and mgmt network device
