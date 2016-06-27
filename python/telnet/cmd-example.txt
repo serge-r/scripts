@@ -1,0 +1,6 @@
+admin
+secretmegapss
+enable sntp
+config time_zone operator + hour 10 min 0
+config sntp primary 176.100.129.11 secondary 176.100.129.22 poll-interval 790
+save
