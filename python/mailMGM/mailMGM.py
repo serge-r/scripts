@@ -1,49 +1,63 @@
 #!/usr/bin/env python
 
-import os, sys, re
-# Argument parse lib
+import os, sys
 import argparse
 import random
+import subprocess
 
-#MAILBOX_DIR = "/var/vmail"
-MAILBOX_DIR = "/home/candidate/repos/scripts/python/mailMGM/testmaildir"
-#MAILCONFIG_DIR = "/etc/dovecot/vmail"
-MAILCONFIG_DIR = "/home/candidate/repos/scripts/python/mailMGM/testdir"
+MAILBOX_DIR = "./mailDir"
+MAILCONFIG_DIR = "./confDir"
+PASS_LEN=12
 
 result = {}
+
+def randomPass (len=PASS_LEN):
+	""" Creates random string """
+	digits = "0123456789"
+	liters = "abcdefghijklmnopqrstuvwxyz+--()"
+	upLiters = liters.upper()
+
+	literList = list(liters + digits + upLiters)
+	random.shuffle(literList)
+	password = "".join(random.choice(literList) for x in xrange(len))
+	return password
+
+def cryptUser (user, passwd):
+	""" Call dovecot adm utility for create crypted string
+	TODO: try generated string by python """
+	PIPE = subprocess.PIPE
+	proc = subprocess.Popen(['doveadm', 'pw', '-s', 'SHA512-CRYPT', '-p', passwd],  stdout = PIPE)
+	string = user + ":" + proc.communicate()[0]
+	return string
 
 # create parser object
 parser = argparse.ArgumentParser(description="Add a mailbox or a domain into exim+dovecot")
 
 # Adding arguments 
 parser.add_argument("mailaddr",
-					help="email in user@domain format or domain")
+			help="email in user@domain format or domain")
 
 parser.add_argument("-c",
-					"--create",
-					action="store_true",
-					help="Create non-exist domains")
+			"--create",
+			action="store_true",
+			help="Create non-exist domains")
 
 args = parser.parse_args()
 
 # Divide mailadd arg into mail and domain parts
 # TODO: make a check for valid input for mail and domains
-# TODO: make all lowercase
-mail, domain = re.split("@",args.mailaddr)
-
-# print "Mail is "+mail, "Domain is "+domain
+mail, domain = args.mailaddr.lower().split("@")
 
 # Get already created domains
 # Fail if MAILCONFIG_DIR is not set 
 try:
 	domains = os.listdir(MAILCONFIG_DIR)
-#	print domains
+# print domains
 except Exception as e:
 	print "Test you MAILCONFIG_DIR variable", e 
 	exit(1)
 
 # check existent domains 
-# TODO - add "create" flag support
 if (domain not in domains) and not args.create:
 	result[args.mailaddr] = {
 		"result" : 0,
@@ -54,11 +68,11 @@ if (domain not in domains) and not args.create:
 elif(args.create):
 	try:
 		# Create directories and passwd\alias files
-		os.mkdir("MAILCONFIG_DIR"+"/"+domain)
-		os.mkdir("MAILBOX_DIR"+"/"+domain)
+		os.mkdir(MAILCONFIG_DIR+"/"+domain)
+		os.mkdir(MAILBOX_DIR+"/"+domain)
 
-		open("MAILCONFIG_DIR"+"/"+domain+"/passwd",'a').close()
-		open("MAILCONFIG_DIR"+"/"+domain+"/aliases",'a').close()
+		open(MAILCONFIG_DIR+"/"+domain+"/passwd",'a').close()
+		open(MAILCONFIG_DIR+"/"+domain+"/aliases",'a').close()
 	except Exception as e:
 		result[args.mailaddr] = {
 			"result" : 0,
@@ -68,24 +82,22 @@ elif(args.create):
 		print result
 
 # Get already created usernames for domain
+# And create if user not exist
 try:
-	with open (MAILCONFIG_DIR+"/"+domain+"/passwd","r") as passwdfile: 
-		# TODO: use match or search - 
-		usernames = (re.split(r":",lines,maxsplit=1) for lines in passwdfile)
-
+	with open (MAILCONFIG_DIR+"/"+domain+"/passwd","ra") as passwdfile: 
+		# TODO: use match or search -  
+		lines = passwdfile.readlines()
+		users = (line.split(":")[0] for line in lines)
+		if mail in users:
+			# TODO: add result output
+			print "user exists"
+			exit(1)
+		# Create user
+		Pass = randomPass()
+		cryptString=cryptUser(user=mail, passwd=Pass)
+		print cryptString
+		# passwdfile.write(cryptString)
 except Exception as e:
 	print e
 	exit(1)
 
-# Check if user is exist
-for name in usernames:
-	if mail == name[0]:
-		result[args.mailaddr] = {
-			"result" : 0,
-			"reason" : "user "+mail+" is exists"
-		}
-		print result
-		exit(1)
-
-
-# create user
