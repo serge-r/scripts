@@ -80,11 +80,11 @@ elif(args.create):
 			"error"  : e
 		}
 		print result
-
+        exit(1)
 # Get already created usernames for domain
 # And create if user not exist
 try:
-	with open (MAILCONFIG_DIR+"/"+domain+"/passwd","ra") as passwdfile: 
+	with open (MAILCONFIG_DIR+"/"+domain+"/passwd","r+") as passwdfile: 
 		# TODO: use match or search -  
 		lines = passwdfile.readlines()
 		users = (line.split(":")[0] for line in lines)
@@ -96,7 +96,7 @@ try:
 		Pass = randomPass()
 		cryptString=cryptUser(user=mail, passwd=Pass)
 		print cryptString
-		# passwdfile.write(cryptString)
+		passwdfile.write(cryptString)
 except Exception as e:
 	print e
 	exit(1)
