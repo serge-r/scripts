@@ -6,7 +6,7 @@ import random
 import subprocess
 
 MAILBOX_DIR = "./mailDir"
-MAILCONFIG_DIR = "./confDir"
+MAILCONFIG_DIR = "./mailConf"
 PASS_LEN=12
 
 result = {}
