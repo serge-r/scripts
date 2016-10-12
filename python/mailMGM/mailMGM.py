@@ -13,9 +13,9 @@ PASS_LEN=12
 CRYPT_SCHEME="SHA512-CRYPT"
 
 POSTMASTER_ADDRESS="postmaster@localhost"
-SMTP_SERVER="localhost"
+SMTP_SERVER="172.16.6.82"
 SUBJECT="Welcome"
-TEXT="Welcome" + user +" to " + domain + "!!!"
+TEXT="Welcome !!!"
 
 result = {}
 
@@ -32,6 +32,7 @@ def randomPass(len=PASS_LEN):
 
 def cryptUser(user, passwd):
 	""" Call dovecot adm utility for create and return crypted string
+	TODO: add check if dovecot is not exists
 	TODO: try generate string by python """
 	PIPE = subprocess.PIPE
 	proc = subprocess.Popen(['doveadm', 'pw', '-s', CRYPT_SCHEME, '-p', passwd],  stdout = PIPE)
@@ -39,18 +40,29 @@ def cryptUser(user, passwd):
 	return string
 
 def sendMail(who):
-	""" Send mail to new user for creating emails dir """
+	""" Send mail to new user for creating emails dir
+	TODO: error in connection
+	"""
 	msg = MIMEText(TEXT)
 	msg["Subject"] = SUBJECT
 	msg["From"] = POSTMASTER_ADDRESS
 	msg["To"] = who
 	try:
-		server = smtplib(SMTP_SERVER)
-		sendmail(POSTMASTER_ADDRESS, [who], msg.as_string())
+		server = smtplib.SMTP(SMTP_SERVER)
+		server.sendmail(POSTMASTER_ADDRESS, [who], msg.as_string())
 		server.quit()
-		return 1
+		result[who] = {
+			"result" : 1,
+			"reason" : "User created"
+		}
+		return result
 	except Exception as e:
-		return 0, e
+		result[who] = {
+			"result" : 0,
+			"reason'": "user not created",
+			"error"  : e
+		}
+		return result
 
 # create parser object
 parser = argparse.ArgumentParser(description="Add a mailbox or a domain into exim+dovecot")
@@ -108,19 +120,29 @@ elif(args.create):
 # And create if user not exist
 try:
 	with open (MAILCONFIG_DIR+"/"+domain+"/passwd","r+") as passwdfile: 
-		# TODO: use match or search -  
+		# TODO: use match or search -
 		lines = passwdfile.readlines()
 		users = (line.split(":")[0] for line in lines)
 		if user in users:
-			# TODO: add result output
-			print "user exists"
+			result[user] = {
+				"result" : 0,
+				"reason" : "User exists"
+			}			
 			exit(1)
 		# Create user
 		Pass = randomPass()
-		cryptString=cryptUser(user=mail, passwd=Pass)
+		print Pass
+		cryptString=cryptUser(user=user, passwd=Pass)
 		print cryptString
 		passwdfile.write(cryptString)
+		print sendMail(user)
+		print "exit"
 except Exception as e:
-	print e
+	result[mailaddr] = {
+		'result' : 0,
+		'reason' : "User not created",
+		'error'	 : e
+	}
+	print result
 	exit(1)
 
