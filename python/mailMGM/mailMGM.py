@@ -24,7 +24,7 @@ def randomPass (len=PASS_LEN):
 
 def cryptUser (user, passwd):
 	""" Call dovecot adm utility for create crypted string
-	TODO: try generated string by python """
+	TODO: try generate string by python """
 	PIPE = subprocess.PIPE
 	proc = subprocess.Popen(['doveadm', 'pw', '-s', 'SHA512-CRYPT', '-p', passwd],  stdout = PIPE)
 	string = user + ":" + proc.communicate()[0]
