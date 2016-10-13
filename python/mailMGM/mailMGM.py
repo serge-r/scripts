@@ -47,14 +47,14 @@ def sendMail(to, timeout=SMTP_TIMEOUT):
 	msg = MIMEText(TEXT)
 	msg["Subject"] = SUBJECT
 	msg["From"] = POSTMASTER_ADDRESS
-	msg["To"] = who
+	msg["To"] = to
 	try:
 		server = smtplib.SMTP(SMTP_SERVER,timeout=timeout)
-		server.sendmail(POSTMASTER_ADDRESS, [who], msg.as_string())
+		server.sendmail(POSTMASTER_ADDRESS, [to], msg.as_string())
 		server.quit()
-		return 1
+		return True
 	except Exception:
-		return 0
+		return False
 
 def main():
 	""" Let's start """
@@ -70,9 +70,10 @@ def main():
 				help="Create non-exist domains")
 	args = parser.parse_args()
 
-	# Divide mailadd arg into mail and domain parts
+	# Divide mailaddr arg into mail and domain parts
 	# TODO: make a check for valid input for mail and domains
-	user, domain = args.mailaddr.lower().split("@")
+	mailaddr = agrs.mailaddr.lower()
+	user, domain = mailaddr.split("@")
 
 	# Get already created domains
 	# Fail if MAILCONFIG_DIR is not set
@@ -85,7 +86,7 @@ def main():
 
 	# check existent domains
 	if (domain not in domains) and not args.create:
-		result[args.mailaddr] = {
+		result[mailaddr] = {
 			"result" : 0,
 			"reason" : "domain is not exists"
 		}
@@ -101,7 +102,7 @@ def main():
 			open(MAILCONFIG_DIR+"/"+domain+"/passwd",'a').close()
 			open(MAILCONFIG_DIR+"/"+domain+"/aliases",'a').close()
 		except Exception as e:
-			result[args.mailaddr] = {
+			result[mailaddr] = {
 				"result" : 0,
 				"reason" : "domain not created",
 				"error"  : e
@@ -117,10 +118,11 @@ def main():
 			lines = passwdfile.readlines()
 			users = (line.split(":")[0] for line in lines)
 			if user in users:
-				result[user] = {
+				result[mailaddr] = {
 					"result" : 0,
 					"reason" : "User exists"
-				}			
+				}
+				print result
 				exit(1)
 			# Create user
 			Pass = randomPass()
@@ -134,7 +136,7 @@ def main():
 				} 
 				print result
 			else:
-				result[mailadd]= {
+				result[mailaddr]= {
 					"result" : 0,
 					"reason" : "Cannot send mail to user, check smtp server"
 				}
@@ -142,9 +144,9 @@ def main():
 			exit(0)
 	except Exception as e:
 		result[mailaddr] = {
-			'result' : 0,
-			'reason' : "User not created",
-			'error'	 : e
+			"result" : 0,
+			"reason" : "User not created",
+			"error"	 : e
 		}
 		print result
 		exit(1)
