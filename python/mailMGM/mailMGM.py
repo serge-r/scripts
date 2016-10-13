@@ -30,7 +30,9 @@ TEXT="""Welcome !!!"""
 result = {}
 
 def randomPass(len=PASS_LEN):
-	""" Creates and return random string """
+	""" Creates and return random string 
+	Liters == letters
+	"""
 	digits = "0123456789"
 	liters = "abcdefghijklmnopqrstuvwxyz+--()"
 	upLiters = liters.upper()
@@ -78,7 +80,7 @@ def main():
 	# Create parser object, and adding arguments
 	parser = argparse.ArgumentParser(description="Add a mailbox domain into exim+dovecot")
 	parser.add_argument("mailaddr",
-				help="email in user@domain format or domain")
+				help="email in user@domain format")
 	parser.add_argument("-c",
 				"--create",
 				action="store_true",
@@ -141,7 +143,7 @@ def main():
 	# And create if user not exist
 	try:
 		with open (MAILCONFIG_DIR+"/"+domain+"/passwd","r+") as passwdfile: 
-			# TODO: use match or search -
+			# Check exists users
 			lines = passwdfile.readlines()
 			users = (line.split(":")[0] for line in lines)
 			if user in users:
@@ -149,17 +151,17 @@ def main():
 				exit(1)
 			# Create user
 			Pass = randomPass()
-			cryptString=cryptUser(user=user, passwd=Pass)
+			cryptString=cryptUser(user, Pass)
 			passwdfile.write(cryptString)
 			# Try to send mail for creating mailbox
 			if sendMail(mailaddr):
 				# f*ck, I forget for password =(
-					result[mailaddr] = {
-						"result" : 1,
-						"reason" : 'User successfully created',
-						"password" : Pass
-					}
-					print(result)
+				result[mailaddr] = {
+					"result" : 1,
+					"reason" : 'User successfully created',
+					"password" : Pass
+				}
+				print(result)
 			else:
 				outPut(mailaddr, 0,	"Cannot send mail to user, check smtp server")
 				exit(1)
