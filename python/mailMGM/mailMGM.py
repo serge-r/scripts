@@ -58,10 +58,8 @@ def sendMail(to, timeout=SMTP_TIMEOUT):
 
 def main():
 	""" Let's start """
-	# create parser object
+	# Create parser object, and adding arguments
 	parser = argparse.ArgumentParser(description="Add a mailbox or a domain into exim+dovecot")
-
-	# Adding arguments
 	parser.add_argument("mailaddr",
 				help="email in user@domain format or domain")
 	parser.add_argument("-c",
@@ -90,7 +88,7 @@ def main():
 			"result" : 0,
 			"reason" : "domain is not exists"
 		}
-		print result
+		print(result)
 		exit(1)
 
 	elif(args.create):
@@ -107,7 +105,7 @@ def main():
 				"reason" : "domain not created",
 				"error"  : e
 			}
-			print result
+			print(result)
 	        exit(1)
 	        
 	# Get already created usernames for domain
@@ -122,25 +120,26 @@ def main():
 					"result" : 0,
 					"reason" : "User exists"
 				}
-				print result
+				print(result)
 				exit(1)
 			# Create user
 			Pass = randomPass()
 			cryptString=cryptUser(user=user, passwd=Pass)
 			passwdfile.write(cryptString)
+			# Try to send mail for creating mailbox
 			if sendMail(mailaddr):
 				result[mailaddr] = {
 					"result" : 1,
 					"reason" : "User succesfully created",
 					"password" : Pass
 				} 
-				print result
+				print(result)
 			else:
 				result[mailaddr]= {
 					"result" : 0,
 					"reason" : "Cannot send mail to user, check smtp server"
 				}
-                print result
+				print(result)
 				exit(1)
 			exit(0)
 	except Exception as e:
@@ -149,7 +148,7 @@ def main():
 			"reason" : "User not created",
 			"error"	 : e
 		}
-		print result
+		print(result)
 		exit(1)
 
 if __name__ == '__main__':
