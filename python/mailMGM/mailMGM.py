@@ -20,7 +20,7 @@ POSTMASTER_ADDRESS="postmaster@localhost"
 SMTP_SERVER="localhost"
 SMTP_TIMEOUT=5
 SUBJECT="Welcome"
-TEXT="""Welcome !!!""""
+TEXT="""Welcome !!!"""
 
 result = {}
 
@@ -101,22 +101,22 @@ def main():
 		exit(1)
 
 	# Check or create existent domains
-	if(args.create):
-		try:
-			# Create directories and passwd\alias files
+    if (args.create):
+	    try:
+		    # Create directories and passwd\alias files
 			os.mkdir(MAILCONFIG_DIR+"/"+domain)
 			os.mkdir(MAILBOX_DIR+"/"+domain)
 			# Touch me)
 			open(MAILCONFIG_DIR+"/"+domain+"/passwd",'a').close()
 			open(MAILCONFIG_DIR+"/"+domain+"/aliases",'a').close()
 		except Exception as e:
-			result[mailaddr] = {
+		    result[mailaddr] = {
 				"result" : 0,
 				"reason" : "Domain not created-"+e 
-			}
+		    }
 			print(result)
 	        exit(1)
-	 else:
+    else:
 	 	if (domain not in domains):
 	 		result[mailaddr] = {
 	 			"result" = 0,
