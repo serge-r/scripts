@@ -133,7 +133,7 @@ def main():
 					"password" : Pass
 				} 
 				print result
-			elif:
+			else:
 				result[mailadd]= {
 					"result" : 0,
 					"reason" : "Cannot send mail to user, check smtp server"
