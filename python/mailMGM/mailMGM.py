@@ -72,7 +72,7 @@ def main():
 
 	# Divide mailaddr arg into mail and domain parts
 	# TODO: make a check for valid input for mail and domains
-	mailaddr = agrs.mailaddr.lower()
+	mailaddr = args.mailaddr.lower()
 	user, domain = mailaddr.split("@")
 
 	# Get already created domains
@@ -140,7 +140,8 @@ def main():
 					"result" : 0,
 					"reason" : "Cannot send mail to user, check smtp server"
 				}
-				exit (1)
+                print result
+				exit(1)
 			exit(0)
 	except Exception as e:
 		result[mailaddr] = {
