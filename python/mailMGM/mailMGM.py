@@ -1,11 +1,15 @@
 #!/usr/bin/env python
 
-import os, sys
+""" Scripts create mailboxes for exim\dovecot mailboxes
+managed on this article:  http://www.lunch.org.uk/wiki/virtualmailboxeswitheximanddovecot 
+"""
+
+import os, sys, re
 import argparse
 import random
 import subprocess
 import smtplib
-from email.mime.text import MIMEText    
+from email.mime.text import MIMEText
 
 MAILBOX_DIR = "./mailDir"
 MAILCONFIG_DIR = "./mailConf"
@@ -13,10 +17,10 @@ PASS_LEN=12
 CRYPT_SCHEME="SHA512-CRYPT"
 
 POSTMASTER_ADDRESS="postmaster@localhost"
-SMTP_SERVER="172.16.6.82"
+SMTP_SERVER="localhost"
 SMTP_TIMEOUT=5
 SUBJECT="Welcome"
-TEXT="Welcome !!!"
+TEXT="""Welcome !!!""""
 
 result = {}
 
@@ -31,12 +35,12 @@ def randomPass(len=PASS_LEN):
 	password = "".join(random.choice(literList) for x in xrange(len))
 	return password
 
-def cryptUser(user, passwd):
+def cryptUser(user, passwd,crypt_scheme=CRYPT_SCHEME):
 	""" Call dovecot adm utility for create and return crypted string
 	TODO: add check if dovecot is not exists
 	TODO: try generate string by python """
 	PIPE = subprocess.PIPE
-	proc = subprocess.Popen(['doveadm', 'pw', '-s', CRYPT_SCHEME, '-p', passwd],  stdout = PIPE)
+	proc = subprocess.Popen(['doveadm', 'pw', '-s', crypt_scheme, '-p', passwd],  stdout = PIPE)
 	string = user + ":" + proc.communicate()[0]
 	return string
 
@@ -53,7 +57,7 @@ def sendMail(to, timeout=SMTP_TIMEOUT):
 		server.sendmail(POSTMASTER_ADDRESS, [to], msg.as_string())
 		server.quit()
 		return True
-	except Exception:
+	except:
 		return False
 
 def main():
@@ -68,45 +72,58 @@ def main():
 				help="Create non-exist domains")
 	args = parser.parse_args()
 
-	# Divide mailaddr arg into mail and domain parts
-	# TODO: make a check for valid input for mail and domains
+	# Email match regex
+	# No http://www.ex-parrot.com/~pdw/Mail-RFC822-Address.html
+	# its simple check
 	mailaddr = args.mailaddr.lower()
-	user, domain = mailaddr.split("@")
-
-	# Get already created domains
-	# Fail if MAILCONFIG_DIR is not set
-	try:
-		domains = os.listdir(MAILCONFIG_DIR)
-	# print domains
-	except Exception as e:
-		print "Test you MAILCONFIG_DIR variable", e 
-		exit(1)
-
-	# check existent domains
-	if (domain not in domains) and not args.create:
+	regex = re.compile(r"([a-z0-9])+([._-]{1}([a-z0-9])+)*@([a-z0-9])+([.-]{1}([a-z0-9])+)*$")
+	if (not regex.match(mailaddr)):
 		result[mailaddr] = {
 			"result" : 0,
-			"reason" : "domain is not exists"
+			"reason" : "Not valid email address"
 		}
-		print(result)
+		print result
 		exit(1)
 
-	elif(args.create):
+	# Divide mailaddr arg into mail and domain parts
+	# TODO: make a check for valid input for mail and domains
+	user, domain = mailaddr.split("@")
+
+	# Get domains and check MAILCONFIG_DIR
+	try:
+		domains = os.listdir(MAILCONFIG_DIR)
+	except:
+		result[mailaddr] = {
+			"result" : 0,
+			"resaon" : "Could not find domains - see MAILCONFIG_DIR variable"
+		}
+		print (result)
+		exit(1)
+
+	# Check or create existent domains
+	if(args.create):
 		try:
 			# Create directories and passwd\alias files
 			os.mkdir(MAILCONFIG_DIR+"/"+domain)
 			os.mkdir(MAILBOX_DIR+"/"+domain)
-
+			# Touch me)
 			open(MAILCONFIG_DIR+"/"+domain+"/passwd",'a').close()
 			open(MAILCONFIG_DIR+"/"+domain+"/aliases",'a').close()
 		except Exception as e:
 			result[mailaddr] = {
 				"result" : 0,
-				"reason" : "domain not created",
-				"error"  : e
+				"reason" : "Domain not created-"+e 
 			}
 			print(result)
 	        exit(1)
+	 else:
+	 	if (domain not in domains):
+	 		result[mailaddr] = {
+	 			"result" = 0,
+	 			"reason" = "Domain not exists"
+	 		}
+	 		print(result)
+	 		exit(1)
 	        
 	# Get already created usernames for domain
 	# And create if user not exist
@@ -145,8 +162,7 @@ def main():
 	except Exception as e:
 		result[mailaddr] = {
 			"result" : 0,
-			"reason" : "User not created",
-			"error"	 : e
+			"reason" : "User not created - some error in passwd file or mail-server: "+e
 		}
 		print(result)
 		exit(1)
