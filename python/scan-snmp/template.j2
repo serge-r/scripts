@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+   <head>
+        <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+        <title>Switch Report</title>
+        <style>
+            table {
+                font-family: "Lucida Sans Unicode", "Lucida Grande", Sans-Serif;
+                font-size: 12px;
+                border-collapse: collapse;
+                border: 3px solid gray;
+                width: 100%;
+            }
+
+            th {
+                padding: 10px 10px;
+            }
+
+            td.report {
+                border: 1px solid gray;
+                text-align: left;
+                padding: 5px 8px;
+            }
+            td {
+                border: 1px solid gray;
+                text-align: center;
+                padding: 5px 8px;
+            }
+        </style>
+   </head>
+   <body>
+    <h1> Device Statistics</h1>
+    <h2> Generated in: {{ time }} </h2>
+    <table border=1>
+        <tr>
+            <td class="report"><b>Model</b></td>
+            <td class="report"><b>Count</b></td>
+        </tr>
+        
+        {% for model in models %}
+        <tr>
+            <td class="report">{{ model.name }}</td>
+            <td class="report">{{ model.count }}</td>
+        </tr>
+        {% endfor %}
+        <tr>
+            <td class="report"><b>All devices responses by SNMP:</b></td>
+            <td class="report"><b> {{ count }}</b></td>
+        </tr>
+    </table>
+    <hr>
+    <h1>Detail info</h1>
+    <table border=1>
+
+        <tr>
+            <td><b>IP</b></td>
+            <td><b>Name</b></td>
+            <td><b>Location</b></td>
+            <td><b>Model</b></td>
+        </tr>
+        {% for s in sw %}
+        <tr>
+            <td>{{ s.ip }}</td>
+            <td>{{ s.name }}</td>
+            <td>{{ s.location }}</td>
+            <td>{{ s.descr }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    </body>
+</html>

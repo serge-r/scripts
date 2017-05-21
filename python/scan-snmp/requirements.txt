@@ -1,0 +1,8 @@
+Jinja2==2.9.6
+MarkupSafe==1.0
+netaddr==0.7.19
+ply==3.10
+pyasn1==0.2.3
+pycryptodome==3.4.5
+pysmi==0.1.2
+pysnmp==4.3.5
