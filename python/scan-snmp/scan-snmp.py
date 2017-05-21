@@ -108,7 +108,7 @@ def main():
             p.join()
 
     print("All processes work is stop")
-:s
+
     # Print models only - post thread running
     all_models = [switch['descr'] for switch in switches]
 
