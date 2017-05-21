@@ -86,8 +86,7 @@ def main():
     keys = ['descr','location','name','ip']
 
     # MGMT network addresses
-    e
-
+    mgmtNetwork = na.IPNetwork("192.168.248.0/28")
     # Community string
     community = "public"
 
